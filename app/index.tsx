@@ -5,8 +5,6 @@ import { ThemedView } from '@/components/ThemedView';
 
 const { ExampleModule } = NativeModules;
 
-console.log(ExampleModule);
-
 export default function HomeScreen() {
   async function handlePrintMessage() {
    const message = await ExampleModule?.returnMessage()
