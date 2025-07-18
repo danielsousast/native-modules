@@ -1,47 +1,72 @@
-import { StyleSheet, NativeModules, TouchableOpacity, NativeEventEmitter } from 'react-native';
+import { StyleSheet, NativeModules, TouchableOpacity, NativeEventEmitter, Button, Alert } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { useState } from 'react';
 
 const { ExampleModule } = NativeModules;
 
 export default function HomeScreen() {
+  const [message, setMessage] = useState('undefined');
+  const [eventMessage, setEventMessage] = useState('undefined');
+
   async function handlePrintMessage() {
-   const message = await ExampleModule?.returnMessage()
-    console.log("Message: ", message);
+    try {
+      const message = await ExampleModule?.returnMessage()
+      setMessage(message)
+    } catch (error: any) {
+      Alert.alert('Error', error.message)
+    }
+  }
+
+  function handleRemoveEventListener() {
+    try {
+      subscription.remove()
+    } catch (error: any) {
+      Alert.alert('Error', error.message)
+    }
+  }
+
+  function handleEventMessage() {
+    try {
+      ExampleModule?.eventMessage(17)
+    } catch (error: any) {
+      Alert.alert('Error', error.message)
+    }
   }
 
   const eventEmitter = new NativeEventEmitter(ExampleModule);
 
   const subscription = eventEmitter.addListener('onMessagePrinted', (event) => {
-    console.log("Message: ", event.value);
+    setEventMessage(event.value);
   });
 
   return (
 
     <ThemedView style={styles.container}>
-      <ThemedText type="title" style={{ marginBottom: 24 }}>Welcome!</ThemedText>
-      <TouchableOpacity style={{ marginBottom: 24 }} onPress={() => ExampleModule?.printMessage('Hello from React Native!')}>
-        <ThemedText>Call Native Module</ThemedText>
-      </TouchableOpacity>
+      <ThemedText type="title" style={{ marginBottom: 24 }}>ExampleModule</ThemedText>
+      <Button
+        title="Call Print Message"
+        onPress={() => ExampleModule?.printMessage('Hello from React Native!')}
+      />
+      <Button
+        title="Call Get Message"
+        onPress={handlePrintMessage}
+      />
+      <Button
+        title="Call Event Message"
+        onPress={handleEventMessage}
+      />
+      <Button
+        title="Remove Event Listener"
+        onPress={handleRemoveEventListener}
+      />
 
-      <TouchableOpacity onPress={handlePrintMessage} style={{ marginBottom: 24 }}>
-        <ThemedText>Call Get Message</ThemedText>
-      </TouchableOpacity>
-
-      <TouchableOpacity 
-        onPress={() => ExampleModule?.eventMessage(17)}
-        style={{ marginBottom: 24 }}
-      >
-        <ThemedText>Call Event Message</ThemedText>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={() => subscription.remove()} style={{ marginBottom: 24 }}>
-        <ThemedText>Remove Event Listener</ThemedText>
-      </TouchableOpacity>
+      <ThemedView style={styles.messageWrapper}>
+        <ThemedText>Message: {message}</ThemedText>
+        <ThemedText>Event Message: {eventMessage}</ThemedText>
+      </ThemedView>
     </ThemedView>
-
-
   );
 }
 
@@ -51,4 +76,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  messageWrapper: {
+    marginBottom: 12,
+    marginTop: 12,
+    paddingHorizontal: 12,
+    backgroundColor: '#f5f5f5',
+    borderWidth: 1,
+    borderColor: '#e5e5e5',
+    borderRadius: 4,
+  }
 });
